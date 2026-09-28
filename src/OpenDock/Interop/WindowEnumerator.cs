@@ -31,12 +31,32 @@ public sealed class WindowEnumerator : IWindowEnumerator
     private const nint WS_EX_TOOLWINDOW = 0x80;
     private const nint WS_EX_APPWINDOW = 0x40000;
 
-    private nint _excludedHwnd;
+    private readonly HashSet<nint> _excludedHwnds = new();
 
-    /// <summary>Never report this window (used for the dock itself).</summary>
-    public void ExcludeWindow(nint hwnd) => _excludedHwnd = hwnd;
+    /// <summary>Never report this window (used for OpenDock's own windows).</summary>
+    public void ExcludeWindow(nint hwnd) => _excludedHwnds.Add(hwnd);
 
     public IReadOnlyList<RunningWindowInfo> Enumerate()
+    {
+        return Scan()
+            .GroupBy(w => w.ExePath, StringComparer.OrdinalIgnoreCase)
+            .Select(g => new RunningWindowInfo(
+                g.First().Hwnd,
+                g.First().Title,
+                g.Key,
+                g.First().Pid,
+                g.Count()))
+            .ToList();
+    }
+
+    public IReadOnlyList<WindowRef> EnumerateIndividual()
+    {
+        return Scan()
+            .Select(w => new WindowRef(w.Hwnd, w.Title, w.ExePath, w.Pid))
+            .ToList();
+    }
+
+    private List<(nint Hwnd, string Title, string ExePath, int Pid)> Scan()
     {
         var windows = new List<(nint Hwnd, string Title, string ExePath, int Pid)>();
 
@@ -44,7 +64,7 @@ public sealed class WindowEnumerator : IWindowEnumerator
         {
             // HWND.Value is internal; the public IntPtr operators are the way out.
             nint h = (nint)(IntPtr)hwnd;
-            if (h == _excludedHwnd)
+            if (_excludedHwnds.Contains(h))
                 return true;
             if (!PInvoke.IsWindowVisible(hwnd))
                 return true;
@@ -74,15 +94,7 @@ public sealed class WindowEnumerator : IWindowEnumerator
             return true;
         }, default);
 
-        return windows
-            .GroupBy(w => w.ExePath, StringComparer.OrdinalIgnoreCase)
-            .Select(g => new RunningWindowInfo(
-                g.First().Hwnd,
-                g.First().Title,
-                g.Key,
-                g.First().Pid,
-                g.Count()))
-            .ToList();
+        return windows;
     }
 
     private static unsafe uint GetWindowProcessId(HWND hwnd)

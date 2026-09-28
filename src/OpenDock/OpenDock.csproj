@@ -18,7 +18,7 @@
          (used by CI for the Core job and by contributors without Windows).
          No-op when building on Windows itself. -->
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <Description>OpenDock — an open-source macOS-style dock for Windows 10/11.</Description>
   </PropertyGroup>
 

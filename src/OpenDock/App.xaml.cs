@@ -13,6 +13,7 @@ public partial class App : Application
     private Mutex? _instanceMutex;
     private TaskbarManager? _taskbarManager;
     private TrayIcon? _trayIcon;
+    private DesktopCoordinator? _coordinator;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -49,13 +50,20 @@ public partial class App : Application
 
         var enumerator = new WindowEnumerator();
         var icons = new IconService();
+        var apps = new AppEnumerator();
+        apps.Refresh();
         var viewModel = new DockViewModel(settings, enumerator, icons);
 
-        var dockWindow = new DockWindow(viewModel, settings);
+        // The v0.2 desktop experience: Launchpad, Spotlight, Exposé,
+        // menu bar, stacks, and the global hotkeys behind them.
+        _coordinator = new DesktopCoordinator(settings, icons, enumerator, apps);
+
+        var dockWindow = new DockWindow(viewModel, settings, _coordinator);
         // Don't list our own window as a running app.
         enumerator.ExcludeWindow(new WindowInteropHelper(dockWindow).EnsureHandle());
+        _coordinator.AttachDock(dockWindow);
 
-        _trayIcon = new TrayIcon(settings, dockWindow);
+        _trayIcon = new TrayIcon(settings, dockWindow, _coordinator);
 
         MainWindow = dockWindow;
         dockWindow.Show();
@@ -68,6 +76,7 @@ public partial class App : Application
         // Always give the user their Windows taskbar back.
         try { _taskbarManager?.Show(); } catch { /* best effort */ }
         _trayIcon?.Dispose();
+        _coordinator?.Dispose();
         try { _instanceMutex?.ReleaseMutex(); } catch { /* already released */ }
         _instanceMutex?.Dispose();
         base.OnExit(e);

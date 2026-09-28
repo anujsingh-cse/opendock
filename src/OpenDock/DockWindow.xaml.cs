@@ -43,6 +43,7 @@ public partial class DockWindow : Window
 
     private readonly DockViewModel _viewModel;
     private readonly SettingsService _settings;
+    private readonly DesktopCoordinator _coordinator;
     private readonly PreviewService _previews = new();
     private readonly Dictionary<Guid, IconVisual> _visuals = new();
     private readonly DispatcherTimer _previewTimer;
@@ -50,10 +51,11 @@ public partial class DockWindow : Window
     private IconVisual? _previewTarget;
     private bool _renderLoopAttached;
 
-    public DockWindow(DockViewModel viewModel, SettingsService settings)
+    public DockWindow(DockViewModel viewModel, SettingsService settings, DesktopCoordinator coordinator)
     {
         _viewModel = viewModel;
         _settings = settings;
+        _coordinator = coordinator;
         InitializeComponent();
 
         ApplyTheme();
@@ -280,6 +282,28 @@ public partial class DockWindow : Window
     {
         var m = vm.Model;
 
+        // Special tiles first.
+        if (m.Kind == DockItemKind.Launchpad)
+        {
+            _coordinator.ToggleLaunchpad();
+            return;
+        }
+        if (m.Kind == DockItemKind.Trash)
+        {
+            OpenTrash();
+            return;
+        }
+        if (m.Kind == DockItemKind.FolderStack && !string.IsNullOrEmpty(m.TargetPath))
+        {
+            if (_visuals.TryGetValue(m.Id, out var stackVisual))
+            {
+                Point anchor = stackVisual.Root.PointToScreen(
+                    new Point(stackVisual.Root.Width / 2, 0));
+                _coordinator.ShowStack(m.TargetPath, anchor);
+            }
+            return;
+        }
+
         if (m.Kind == DockItemKind.PinnedApp && !m.IsRunning && !string.IsNullOrEmpty(m.TargetPath))
         {
             try
@@ -344,6 +368,75 @@ public partial class DockWindow : Window
         menu.Items.Add(header);
         menu.Items.Add(new Separator());
 
+        if (m.Kind == DockItemKind.Trash)
+        {
+            var openTrash = new MenuItem { Header = "Open Trash" };
+            openTrash.Click += (_, _) => OpenTrash();
+            menu.Items.Add(openTrash);
+
+            var emptyTrash = new MenuItem { Header = "Empty Trash" };
+            emptyTrash.Click += (_, _) =>
+            {
+                if (MessageBox.Show("Permanently delete everything in the Recycle Bin?",
+                        "OpenDock", MessageBoxButton.YesNo, MessageBoxImage.Question)
+                    == MessageBoxResult.Yes)
+                {
+                    Interop.RecycleBin.Empty();
+                    _viewModel.Refresh();
+                }
+            };
+            menu.Items.Add(emptyTrash);
+
+            menu.PlacementTarget = visual.Root;
+            menu.IsOpen = true;
+            return;
+        }
+
+        if (m.Kind == DockItemKind.FolderStack && !string.IsNullOrEmpty(m.TargetPath))
+        {
+            string folderPath = m.TargetPath;
+            var openFolder = new MenuItem { Header = "Open Folder" };
+            openFolder.Click += (_, _) =>
+            {
+                Point anchor = visual.Root.PointToScreen(
+                    new Point(visual.Root.Width / 2, 0));
+                _coordinator.ShowStack(folderPath, anchor);
+            };
+            menu.Items.Add(openFolder);
+            menu.Items.Add(new Separator());
+
+            var viewHeader = new MenuItem { Header = "Display as", IsEnabled = false };
+            menu.Items.Add(viewHeader);
+            foreach (var mode in Enum.GetValues<StackViewMode>())
+            {
+                var modeItem = new MenuItem
+                {
+                    Header = mode.ToString(),
+                    IsCheckable = true,
+                    IsChecked = CurrentStackView(folderPath) == mode,
+                };
+                modeItem.Click += (_, _) =>
+                {
+                    _settings.Update(s => s.StackViews[folderPath] = mode);
+                };
+                menu.Items.Add(modeItem);
+            }
+            menu.Items.Add(new Separator());
+
+            var removeFolder = new MenuItem { Header = "Remove from Dock" };
+            removeFolder.Click += (_, _) =>
+            {
+                _settings.Update(s => s.PinnedApps.RemoveAll(p =>
+                    string.Equals(p.Path, folderPath, StringComparison.OrdinalIgnoreCase)));
+                _viewModel.Refresh();
+            };
+            menu.Items.Add(removeFolder);
+
+            menu.PlacementTarget = visual.Root;
+            menu.IsOpen = true;
+            return;
+        }
+
         var openItem = new MenuItem { Header = m.IsRunning ? "Show" : "Open" };
         openItem.Click += (_, _) => Activate(vm);
         menu.Items.Add(openItem);
@@ -388,6 +481,7 @@ public partial class DockWindow : Window
                 {
                     Name = System.IO.Path.GetFileNameWithoutExtension(f.TrimEnd('\\')),
                     Path = f,
+                    IsFolder = Directory.Exists(f),
                 });
                 changed = true;
             }
@@ -449,5 +543,25 @@ public partial class DockWindow : Window
             new Rect(Left, Top, Width, Height).Contains(new Point(cursorScreen.X, cursorScreen.Y));
 
         Visibility = nearEdge || overDock ? Visibility.Visible : Visibility.Hidden;
+    }
+
+    // ------------------------------------------------------------------ stacks / trash
+
+    private StackViewMode CurrentStackView(string folderPath) =>
+        _settings.Current.StackViews.TryGetValue(folderPath, out var mode)
+            ? mode
+            : _settings.Current.DefaultStackView;
+
+    private void OpenTrash()
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo("shell:RecycleBinFolder") { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Couldn't open the Recycle Bin:\n{ex.Message}", "OpenDock",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
     }
 }

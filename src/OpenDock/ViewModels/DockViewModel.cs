@@ -100,11 +100,21 @@ public sealed partial class DockViewModel : ObservableObject
         var desired = new List<DockItem>();
         var pinnedExes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
+        // Launchpad leads the dock, macOS-style.
+        desired.Add(new DockItem
+        {
+            Kind = DockItemKind.Launchpad,
+            DisplayName = "Launchpad",
+            IconKey = "special:launchpad",
+            MatchKey = "special:launchpad",
+        });
+
         foreach (var pin in _settings.Current.PinnedApps)
         {
+            bool isFolder = pin.IsFolder || Directory.Exists(pin.Path);
             var item = new DockItem
             {
-                Kind = DockItemKind.PinnedApp,
+                Kind = isFolder ? DockItemKind.FolderStack : DockItemKind.PinnedApp,
                 DisplayName = pin.Name,
                 TargetPath = pin.Path,
                 IconKey = pin.Path,
@@ -139,6 +149,18 @@ public sealed partial class DockViewModel : ObservableObject
                 MatchKey = "run:" + w.ExePath.ToLowerInvariant(),
             });
         }
+
+        // The Trash anchors the end of the dock; its icon tracks the bin state.
+        bool trashEmpty;
+        try { trashEmpty = Interop.RecycleBin.IsEmpty(); }
+        catch { trashEmpty = true; }
+        desired.Add(new DockItem
+        {
+            Kind = DockItemKind.Trash,
+            DisplayName = "Trash",
+            IconKey = trashEmpty ? "special:trash-empty" : "special:trash-full",
+            MatchKey = "special:trash",
+        });
 
         var existing = new Dictionary<string, DockItemViewModel>(StringComparer.Ordinal);
         foreach (var vm in Items)

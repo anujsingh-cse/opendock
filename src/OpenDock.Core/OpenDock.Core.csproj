@@ -7,7 +7,7 @@
     <LangVersion>latest</LangVersion>
     <RootNamespace>OpenDock.Core</RootNamespace>
     <AssemblyName>OpenDock.Core</AssemblyName>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <Description>Portable core library for OpenDock: settings, layout math, and abstractions. No Windows dependencies.</Description>
   </PropertyGroup>
 

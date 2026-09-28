@@ -32,8 +32,25 @@
 
             <TextBlock Text="Minimize effect" Margin="0,8,0,0"/>
             <ComboBox x:Name="MinimizeCombo"/>
-            <TextBlock Text="v0.1 plays a smooth scale pulse on the tile; true genie/suck warps land in v0.2."
+
+            <TextBlock Text="macOS experience" FontWeight="Bold" Margin="0,16,0,8"/>
+
+            <CheckBox x:Name="MenuBarCheck"
+                      Content="Show the top menu bar"/>
+
+            <TextBlock Text="Launchpad hotkey" Margin="0,8,0,0"/>
+            <TextBox x:Name="LaunchpadHotkeyBox" Margin="0,2,0,0"/>
+
+            <TextBlock Text="Spotlight hotkey" Margin="0,8,0,0"/>
+            <TextBox x:Name="SpotlightHotkeyBox" Margin="0,2,0,0"/>
+
+            <TextBlock Text="Exposé hotkey" Margin="0,8,0,0"/>
+            <TextBox x:Name="ExposeHotkeyBox" Margin="0,2,0,0"/>
+            <TextBlock Text="Examples: Ctrl+Space, Alt+F1, F9. Leave blank to disable."
                        TextWrapping="Wrap" Opacity="0.6" Margin="0,4,0,0"/>
+
+            <TextBlock Text="Default stack view" Margin="0,8,0,0"/>
+            <ComboBox x:Name="StackViewCombo"/>
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,24,0,0">
                 <Button Content="Cancel" Width="80" Margin="0,0,8,0" Click="OnCancel"/>

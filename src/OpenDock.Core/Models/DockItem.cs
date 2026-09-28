@@ -14,6 +14,12 @@ public enum DockItemKind
 
     /// <summary>A folder whose contents fan out on click (roadmap).</summary>
     FolderStack,
+
+    /// <summary>Opens Launchpad; pinned to the front of the dock.</summary>
+    Launchpad,
+
+    /// <summary>The Recycle Bin tile; pinned to the end of the dock.</summary>
+    Trash,
 }
 
 /// <summary>

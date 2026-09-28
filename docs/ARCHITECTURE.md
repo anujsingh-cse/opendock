@@ -8,25 +8,48 @@ src/OpenDock.sln
 │   ├── Models/
 │   │   ├── DockItem.cs            tile data (kind, paths, hwnd, badges, progress)
 │   │   └── AppSettings.cs         JSON-serializable settings + enums
+│   │                              (StackViewMode, LaunchpadItem/Folder, hotkeys,
+│   │                               LaunchpadOrder, StackViews)
 │   ├── Services/
 │   │   └── SettingsService.cs     load/save %APPDATA%/OpenDock/settings.json
 │   ├── Layout/
 │   │   └── DockLayoutEngine.cs    PURE magnification math (unit-testable)
+│   ├── Search/
+│   │   └── SpotlightRanker.cs     PURE fuzzy ranking (unit-testable)
 │   └── Abstractions/
 │       ├── IIconProvider.cs       platform image source behind an interface
 │       └── IWindowEnumerator.cs   running-window enumeration behind an interface
+│                                  (+ WindowRef for individual windows / Exposé)
 └── OpenDock/                      net8.0-windows, WPF
     ├── App.xaml(.cs)              single-instance mutex, crash log, wiring
+    ├── DesktopCoordinator.cs      owns Launchpad/Spotlight/Exposé/menu bar/
+    │                             stacks + global hotkeys; one instance
     ├── DockWindow.xaml(.cs)       the dock bar: Canvas + render loop
+    ├── MenuBarWindow.xaml(.cs)   top menu bar + Control Center popup
+    ├── LaunchpadWindow.xaml(.cs)  paged app grid, folders, drag-rearrange
+    ├── StackPopup.xaml(.cs)       folder stacks: fan/grid/list
+    ├── SpotlightWindow.xaml(.cs)  fuzzy search overlay
+    ├── ExposeWindow.xaml(.cs)     live-window overview grid
     ├── PreferencesWindow.xaml(.cs)
     ├── TrayIcon.cs                notify icon (H.NotifyIcon.Wpf) + menu
     ├── ViewModels/
     │   └── DockViewModel.cs       1-second reconcile of pins + windows
+    │                              (+ Launchpad lead tile, Trash tail tile)
     ├── Interop/
     │   ├── WindowEnumerator.cs    EnumWindows → taskbar-style filtering → group by exe
+    │   │                         (+ individual-window enumeration for Exposé)
+    │   ├── AppEnumerator.cs       Start Menu .lnk scan → Launchpad items
+    │   │                         (UWP/Store apps via their Start Menu entries)
+    │   ├── ShellLink.cs           IShellLinkW resolution of .lnk targets
     │   ├── IconService.cs         SHGetFileInfo → trim → cache (single funnel)
+    │   │                         (+ runtime Launchpad glyph, Recycle Bin icons)
     │   ├── TaskbarManager.cs      hide/restore Shell_TrayWnd
-    │   └── PreviewService.cs      DWM thumbnails into an opaque host window
+    │   ├── PreviewService.cs      DWM thumbnails into an opaque host window
+    │   ├── ThumbnailCell.cs       HwndHost cell with a live DWM thumbnail (Exposé)
+    │   ├── HotkeyManager.cs       RegisterHotKey + WM_HOTKEY dispatch
+    │   ├── RecycleBin.cs          SHQueryRecycleBin / SHEmptyRecycleBin
+    │   ├── SystemPower.cs         lock/logoff/sleep/restart/shutdown + settings URIs
+    │   └── VolumeControl.cs       CoreAudio endpoint volume (IMMDeviceEnumerator)
     └── NativeMethods.txt          CsWin32 API list
 ```
 
@@ -104,8 +127,20 @@ bottom-anchored growth (tile top = content bottom − drawn size) and the
   UI errors.
 - **Single instance:** a named mutex (`OpenDock_SingleInstance`); a second
   launch exits immediately.
-- **Own-window exclusion:** the dock's HWND is registered with
+- **Own-window exclusion:** the dock's HWND — and every OpenDock overlay
+  (menu bar, Launchpad, Spotlight, Exposé) — is registered with
   `WindowEnumerator.ExcludeWindow` so OpenDock never tiles itself.
+- **Global hotkeys** (`HotkeyManager`): plain-text chords like `Ctrl+Space`
+  parsed in managed code, registered via `RegisterHotKey` on the dock window,
+  dispatched on `WM_HOTKEY`. Re-registered whenever settings change so
+  Preferences edits apply immediately.
+- **Exposé thumbnails:** DWM only mirrors into real HWNDs, so each Exposé
+  cell is an `HwndHost` child (`ThumbnailCell`) with its own registered
+  thumbnail. The overlay window itself stays transparent WPF.
+- **COM casts:** hand-declared COM-import coclasses must NOT be `sealed` —
+  C# only allows class→interface explicit conversion for non-sealed classes
+  (runtime resolves via QueryInterface). This bit `ShellLink` and
+  `VolumeControl` during v0.2.
 
 ## Threading (v0.1)
 

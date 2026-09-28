@@ -15,6 +15,7 @@ public partial class PreferencesWindow : Window
 
         ThemeCombo.ItemsSource = Enum.GetValues<DockTheme>();
         MinimizeCombo.ItemsSource = Enum.GetValues<MinimizeEffect>();
+        StackViewCombo.ItemsSource = Enum.GetValues<StackViewMode>();
 
         var s = _settings.Current;
         IconSizeSlider.Value = s.IconSize;
@@ -25,6 +26,11 @@ public partial class PreferencesWindow : Window
         HideTaskbarCheck.IsChecked = s.HideTaskbar;
         PreviewsCheck.IsChecked = s.ShowWindowPreviews;
         MinimizeCombo.SelectedItem = s.MinimizeEffect;
+        MenuBarCheck.IsChecked = s.MenuBarEnabled;
+        LaunchpadHotkeyBox.Text = s.LaunchpadHotkey;
+        SpotlightHotkeyBox.Text = s.SpotlightHotkey;
+        ExposeHotkeyBox.Text = s.ExposeHotkey;
+        StackViewCombo.SelectedItem = s.DefaultStackView;
     }
 
     private void OnSave(object sender, RoutedEventArgs e)
@@ -39,6 +45,11 @@ public partial class PreferencesWindow : Window
             s.HideTaskbar = HideTaskbarCheck.IsChecked == true;
             s.ShowWindowPreviews = PreviewsCheck.IsChecked == true;
             s.MinimizeEffect = (MinimizeEffect)MinimizeCombo.SelectedItem;
+            s.MenuBarEnabled = MenuBarCheck.IsChecked == true;
+            s.LaunchpadHotkey = LaunchpadHotkeyBox.Text.Trim();
+            s.SpotlightHotkey = SpotlightHotkeyBox.Text.Trim();
+            s.ExposeHotkey = ExposeHotkeyBox.Text.Trim();
+            s.DefaultStackView = (StackViewMode)StackViewCombo.SelectedItem;
         });
         DialogResult = true;
         Close();

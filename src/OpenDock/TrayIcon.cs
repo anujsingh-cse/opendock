@@ -17,7 +17,7 @@ public sealed class TrayIcon : IDisposable
     private readonly Bitmap _bitmap; // must stay alive while the HICON is in use
     private bool _disposed;
 
-    public TrayIcon(SettingsService settings, DockWindow dockWindow)
+    public TrayIcon(SettingsService settings, DockWindow dockWindow, DesktopCoordinator coordinator)
     {
         _bitmap = CreateBitmap();
         _icon = new TaskbarIcon
@@ -29,16 +29,21 @@ public sealed class TrayIcon : IDisposable
 
         var menu = new ContextMenu();
 
+        var launchpadItem = new MenuItem { Header = "Launchpad" };
+        launchpadItem.Click += (_, _) => coordinator.ToggleLaunchpad();
+
+        var spotlightItem = new MenuItem { Header = "Spotlight Search" };
+        spotlightItem.Click += (_, _) => coordinator.ToggleSpotlight();
+
         var prefsItem = new MenuItem { Header = "Preferences…" };
-        prefsItem.Click += (_, _) =>
-        {
-            var prefs = new PreferencesWindow(settings) { Owner = dockWindow };
-            prefs.ShowDialog();
-        };
+        prefsItem.Click += (_, _) => coordinator.OpenPreferences(dockWindow);
 
         var quitItem = new MenuItem { Header = "Quit OpenDock" };
         quitItem.Click += (_, _) => Application.Current.Shutdown();
 
+        menu.Items.Add(launchpadItem);
+        menu.Items.Add(spotlightItem);
+        menu.Items.Add(new Separator());
         menu.Items.Add(prefsItem);
         menu.Items.Add(new Separator());
         menu.Items.Add(quitItem);
