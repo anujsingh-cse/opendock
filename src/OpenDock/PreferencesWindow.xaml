@@ -1,0 +1,44 @@
+<Window x:Class="OpenDock.PreferencesWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="OpenDock Preferences"
+        Width="430" Height="500"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="16">
+            <TextBlock Text="Appearance" FontWeight="Bold" Margin="0,0,0,8"/>
+
+            <TextBlock Text="Icon size"/>
+            <Slider x:Name="IconSizeSlider" Minimum="32" Maximum="96"
+                    TickFrequency="8" IsSnapToTickEnabled="True"/>
+
+            <CheckBox x:Name="MagnificationCheck" Content="Magnification on hover" Margin="0,8,0,0"/>
+
+            <TextBlock Text="Magnified size" Margin="0,8,0,0"/>
+            <Slider x:Name="MagnifiedSizeSlider" Minimum="48" Maximum="128"
+                    TickFrequency="8" IsSnapToTickEnabled="True"/>
+
+            <TextBlock Text="Theme" Margin="0,8,0,0"/>
+            <ComboBox x:Name="ThemeCombo"/>
+
+            <TextBlock Text="Behavior" FontWeight="Bold" Margin="0,16,0,8"/>
+
+            <CheckBox x:Name="AutoHideCheck" Content="Auto-hide the dock"/>
+            <CheckBox x:Name="HideTaskbarCheck"
+                      Content="Hide the Windows taskbar while OpenDock runs" Margin="0,4,0,0"/>
+            <CheckBox x:Name="PreviewsCheck"
+                      Content="Show window previews on hover" Margin="0,4,0,0"/>
+
+            <TextBlock Text="Minimize effect" Margin="0,8,0,0"/>
+            <ComboBox x:Name="MinimizeCombo"/>
+            <TextBlock Text="v0.1 plays a smooth scale pulse on the tile; true genie/suck warps land in v0.2."
+                       TextWrapping="Wrap" Opacity="0.6" Margin="0,4,0,0"/>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,24,0,0">
+                <Button Content="Cancel" Width="80" Margin="0,0,8,0" Click="OnCancel"/>
+                <Button Content="Save" Width="80" IsDefault="True" Click="OnSave"/>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</Window>

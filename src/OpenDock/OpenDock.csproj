@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>OpenDock</AssemblyName>
+    <RootNamespace>OpenDock</RootNamespace>
+    <!-- A desktop dock is x64-only: CsWin32 refuses arch-specific APIs
+         (GetWindowLongPtrW, SHGetFileInfo) for AnyCPU. -->
+    <PlatformTarget>x64</PlatformTarget>
+    <!-- Needed for pointer-based CsWin32 signatures (e.g. GetWindowThreadProcessId). -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- Lets this Windows-only project also compile on Linux/macOS
+         (used by CI for the Core job and by contributors without Windows).
+         No-op when building on Windows itself. -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <Version>0.1.0</Version>
+    <Description>OpenDock — an open-source macOS-style dock for Windows 10/11.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="Microsoft.Windows.CsWin32" Version="0.3.183" PrivateAssets="all" />
+    <PackageReference Include="H.NotifyIcon.Wpf" Version="2.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OpenDock.Core\OpenDock.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="NativeMethods.txt" />
+  </ItemGroup>
+
+</Project>

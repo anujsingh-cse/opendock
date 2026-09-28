@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>OpenDock.Core</RootNamespace>
+    <AssemblyName>OpenDock.Core</AssemblyName>
+    <Version>0.1.0</Version>
+    <Description>Portable core library for OpenDock: settings, layout math, and abstractions. No Windows dependencies.</Description>
+  </PropertyGroup>
+
+</Project>

@@ -1,0 +1,21 @@
+// CsWin32 source-generated Win32 interop. One API or struct per line.
+//
+// Hand-declared with DllImport in code instead (see the call sites):
+//   GetWindowTextW, GetWindowTextLengthW, FindWindowW, ShowWindow,
+//   GetWindowLongPtrW (needs an internal enum for the index),
+//   SHGetFileInfoW (its SHFILEINFOW fields are internal — unreadable),
+//   DestroyIcon.
+// The generated overloads for those are awkward or unusable; a comment at
+// each site says why.
+DWM_THUMBNAIL_PROPERTIES
+DwmRegisterThumbnail
+DwmUnregisterThumbnail
+DwmUpdateThumbnailProperties
+EnumWindows
+GetCursorPos
+GetForegroundWindow
+GetWindowThreadProcessId
+IsIconic
+IsWindowVisible
+PostMessageW
+SetForegroundWindow
